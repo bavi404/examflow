@@ -54,7 +54,7 @@ export default function AdmitCardPage() {
       const result = await query.get(candidateId!);
 
       const candidateData: CandidateData = {
-        id: result.id,
+        id: result.id!,
         fullName: result.get('fullName'),
         fatherName: result.get('fatherName'),
         motherName: result.get('motherName'),
@@ -253,12 +253,12 @@ export default function AdmitCardPage() {
                 </div>
 
                 <div>
-                  <p className="text-gray-500 font-medium">Father's Name</p>
+                  <p className="text-gray-500 font-medium">Father&apos;s Name</p>
                   <p className="font-semibold text-gray-800">{candidate.fatherName}</p>
                 </div>
 
                 <div>
-                  <p className="text-gray-500 font-medium">Mother's Name</p>
+                  <p className="text-gray-500 font-medium">Mother&apos;s Name</p>
                   <p className="font-semibold text-gray-800">{candidate.motherName}</p>
                 </div>
 
