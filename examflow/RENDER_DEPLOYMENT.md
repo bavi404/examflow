@@ -64,18 +64,20 @@ git push
    | **Branch** | `main` |
    | **Root Directory** | `examflow` (if your Python files are in subfolder) or leave blank |
    | **Runtime** | `Python 3` |
-   | **Build Command** | `pip install -r requirements.txt` |
+   | **Build Command** | `pip install --upgrade pip setuptools wheel && pip install -r requirements.txt` |
    | **Start Command** | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
    | **Instance Type** | Free |
 
-5. **Environment Variables** (Add these):
+5. **Environment Variables** (Optional):
    
-   Click "Advanced" → "Add Environment Variable":
+   Click "Advanced" → "Add Environment Variable" if needed:
    
    | Key | Value |
    |-----|-------|
-   | `PYTHON_VERSION` | `3.11.0` |
+   | `PYTHON_VERSION` | `3.11.7` |
    | `PORT` | `10000` |
+   
+   **Note:** Render will auto-detect Python version from `runtime.txt` file.
 
 6. **Click "Create Web Service"**
 
@@ -185,14 +187,26 @@ Expected response:
 - Render free tier spins down after 15 minutes of inactivity
 - First request after spin-down takes longer
 
+### Error: "Cannot import 'setuptools.build_meta'" or Build Failed
+
+**Cause:** Python version too new (3.13) or missing build tools
+
+**Solution:**
+1. Make sure `runtime.txt` exists with: `python-3.11.7`
+2. Build command should be: `pip install --upgrade pip setuptools wheel && pip install -r requirements.txt`
+3. Check Render is using Python 3.11.x (not 3.13)
+4. Clear build cache and redeploy:
+   - Render Dashboard → Settings → "Clear build cache & deploy"
+
 ### Error: "ModuleNotFoundError" or "ImportError"
 
 **Cause:** Missing dependencies
 
 **Solution:**
 1. Check `requirements.txt` has all dependencies
-2. Check Render build logs
-3. Redeploy service
+2. Check Render build logs for specific missing package
+3. Add missing package to requirements.txt
+4. Redeploy service
 
 ### Error: "Model file not found"
 

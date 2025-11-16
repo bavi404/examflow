@@ -85,7 +85,22 @@ In Vercel → Deployments:
 - Latest deployment should be AFTER you added the environment variable
 - Status should be "Ready"
 
-### Check #4: Model File Exists?
+### Check #4: Build Failed on Render?
+
+If you see **"Cannot import 'setuptools.build_meta'"** error:
+
+**Solution:**
+1. Go to Render Dashboard → Your Service
+2. Click **Settings** → **"Clear build cache & deploy"**
+3. Make sure these files are in your repo:
+   - ✅ `runtime.txt` (contains: `python-3.11.7`)
+   - ✅ `requirements.txt` (updated with setuptools)
+   - ✅ `render.yaml` (correct build command)
+4. Redeploy
+
+The latest code push fixed this issue automatically.
+
+### Check #5: Model File Exists?
 
 In your GitHub repo, check if `best.pt` file is committed:
 
