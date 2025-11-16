@@ -39,16 +39,23 @@ Visit http://localhost:3000 and test the registration flow.
 In your Vercel project:
 
 1. Go to **Settings** → **Environment Variables**
-2. Add these **two variables**:
+2. Add these **three variables**:
 
 | Name | Value | Environment |
 |------|-------|-------------|
 | `BACK4APP_APP_ID` | your_app_id | Production, Preview, Development |
 | `BACK4APP_JS_KEY` | your_js_key | Production, Preview, Development |
+| `OMR_API_URL` | your_render_url | Production, Preview, Development |
+
+**Example for OMR_API_URL:**
+```
+https://examflow-omr-processor.onrender.com
+```
 
 **⚠️ Important:**
 - Do **NOT** use `NEXT_PUBLIC_` prefix
 - Apply to all environments (Production, Preview, Development)
+- OMR_API_URL should be your deployed Render service URL
 
 ---
 
@@ -85,51 +92,37 @@ vercel --prod
 
 ### 4️⃣ **Python Backend (OMR Processing)**
 
-The Python server must be deployed separately. Choose one:
+The Python OMR processor must be deployed separately to Render.com.
 
-#### **Option 1: Railway.app** (Easiest)
+**📖 Complete Guide:** See [`RENDER_DEPLOYMENT.md`](./RENDER_DEPLOYMENT.md) for detailed step-by-step instructions.
 
-1. Create account at [Railway.app](https://railway.app)
-2. Click "New Project" → "Deploy from GitHub repo"
-3. Add these files to your Python repo:
+#### **Quick Setup:**
 
-**`Procfile`:**
-```
-web: uvicorn main:app --host 0.0.0.0 --port $PORT
-```
+1. **Deploy to Render.com:**
+   - Go to [Render.com](https://render.com) and sign in
+   - New → Web Service
+   - Connect your GitHub repo
+   - Configure:
+     - **Build Command:** `pip install -r requirements.txt`
+     - **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+     - **Environment Variables:** `PYTHON_VERSION=3.11.0`
+   - Deploy and wait 5-10 minutes
 
-**`requirements.txt`:**
-```
-fastapi
-uvicorn[standard]
-opencv-python-headless
-easyocr
-ultralytics
-python-multipart
-```
+2. **Copy Your Service URL:**
+   ```
+   https://examflow-omr-processor.onrender.com
+   ```
 
-4. Deploy and copy the URL
+3. **Add to Vercel Environment Variables:**
+   - Variable: `OMR_API_URL`
+   - Value: Your Render URL (from step 2)
 
-#### **Option 2: Render.com** (Free Tier)
+**⚠️ Important:**
+- Make sure `best.pt` model file is in your repository
+- If file is too large, use Git LFS (see RENDER_DEPLOYMENT.md)
+- First request after inactivity may take 30-60s (free tier cold start)
 
-1. Create account at [Render.com](https://render.com)
-2. New → Web Service
-3. Connect GitHub repo
-4. Build Command: `pip install -r requirements.txt`
-5. Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-6. Deploy and copy URL
-
-#### **Update API Endpoint**
-
-In `examflow/src/app/api/process-omr/route.ts`, line 12:
-
-```typescript
-// Replace localhost with your deployed Python backend
-const response = await fetch('https://your-python-backend.railway.app/process-omr', {
-  method: 'POST',
-  body: formData,
-});
-```
+**✅ No code changes needed!** The API route now uses the `OMR_API_URL` environment variable.
 
 ---
 
