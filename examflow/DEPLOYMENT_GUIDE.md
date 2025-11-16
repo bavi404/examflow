@@ -92,37 +92,67 @@ vercel --prod
 
 ### 4️⃣ **Python Backend (OMR Processing)**
 
-The Python OMR processor must be deployed separately to Render.com.
+The Python OMR processor must be deployed separately. We **recommend Hugging Face Spaces** for ML workloads.
 
-**📖 Complete Guide:** See [`RENDER_DEPLOYMENT.md`](./RENDER_DEPLOYMENT.md) for detailed step-by-step instructions.
+#### **🏆 Recommended: Hugging Face Spaces (16GB RAM)**
 
-#### **Quick Setup:**
+**📖 Complete Guide:** See [`HF_SPACES_DEPLOYMENT.md`](./HF_SPACES_DEPLOYMENT.md) for detailed step-by-step instructions.
 
-1. **Deploy to Render.com:**
-   - Go to [Render.com](https://render.com) and sign in
-   - New → Web Service
-   - Connect your GitHub repo
-   - Configure:
-     - **Build Command:** `pip install -r requirements.txt`
-     - **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
-     - **Environment Variables:** `PYTHON_VERSION=3.11.0`
-   - Deploy and wait 5-10 minutes
+**Why Hugging Face Spaces?**
+- ✅ **16GB RAM** (vs Render's 512MB)
+- ✅ **Perfect for ML models** (YOLO, PyTorch, OpenCV)
+- ✅ **Free tier** with no credit card
+- ✅ **No out-of-memory errors**
+- ✅ **Fast cold starts**
 
-2. **Copy Your Service URL:**
-   ```
-   https://examflow-omr-processor.onrender.com
+**Quick Setup:**
+
+1. **Create a Space:**
+   - Go to https://huggingface.co/spaces
+   - Click "Create new Space"
+   - Choose **Docker SDK**
+   - Select **CPU basic** (16GB RAM, free)
+
+2. **Clone and Deploy:**
+   ```bash
+   git clone https://huggingface.co/spaces/YOUR_USERNAME/examflow-omr-processor
+   cd examflow-omr-processor
+   
+   # Copy files (from examflow directory)
+   cp main.py omr_processor.py requirements.txt best.pt Dockerfile .dockerignore .
+   cp README_HF_SPACES.md README.md
+   
+   # Push to deploy
+   git lfs track "*.pt"
+   git add .
+   git commit -m "Initial deployment"
+   git push
    ```
 
 3. **Add to Vercel Environment Variables:**
    - Variable: `OMR_API_URL`
-   - Value: Your Render URL (from step 2)
+   - Value: `https://YOUR_USERNAME-examflow-omr-processor.hf.space`
 
-**⚠️ Important:**
-- Make sure `best.pt` model file is in your repository
-- If file is too large, use Git LFS (see RENDER_DEPLOYMENT.md)
-- First request after inactivity may take 30-60s (free tier cold start)
+**✅ Deployment takes 3-5 minutes!**
 
-**✅ No code changes needed!** The API route now uses the `OMR_API_URL` environment variable.
+---
+
+#### **Alternative: Render.com (512MB RAM)**
+
+**⚠️ Note:** Render's free tier (512MB RAM) is insufficient for YOLO + PyTorch. Consider this only if:
+- You have a paid Render plan (1GB+ RAM)
+- You've optimized the model significantly
+
+**📖 Complete Guide:** See [`RENDER_DEPLOYMENT.md`](./RENDER_DEPLOYMENT.md) for Render-specific instructions.
+
+**Quick Setup (if using Render):**
+
+1. Deploy to [Render.com](https://render.com)
+2. Configure: Build command: `pip install -r requirements.txt`
+3. Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+4. Add to Vercel: `OMR_API_URL` = Your Render URL
+
+**⚠️ Memory Issues:** Expect out-of-memory errors on free tier.
 
 ---
 

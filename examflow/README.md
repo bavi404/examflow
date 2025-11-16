@@ -90,20 +90,24 @@ Or push to GitHub and connect to Vercel for automatic deployments.
 
 ### Step 3: Deploy Python Backend Separately
 
-The Python OMR server needs to be hosted separately. Options:
+The Python OMR server needs to be hosted separately.
 
-- **Railway.app** (easiest)
-- **Render.com** (free tier)
-- **AWS EC2** / **DigitalOcean**
+**🏆 Recommended: Hugging Face Spaces** (16GB RAM, perfect for ML)
+- See [`HF_SPACES_DEPLOYMENT.md`](./HF_SPACES_DEPLOYMENT.md) for step-by-step guide
+- Free tier with 16GB RAM
+- No out-of-memory issues
+- Optimized for ML workloads
 
-Then update the API endpoint in `src/app/api/process-omr/route.ts`:
+**Alternative Options:**
+- **Railway.app** (512MB → 8GB RAM)
+- **Google Cloud Run** (1-4GB RAM)
+- **Render.com** (⚠️ 512MB free tier - insufficient for YOLO)
 
-```typescript
-const response = await fetch('https://your-python-backend.com/process-omr', {
-  method: 'POST',
-  body: formData,
-});
-```
+Then set the environment variable in Vercel:
+- **Variable:** `OMR_API_URL`
+- **Value:** `https://YOUR_USERNAME-examflow-omr-processor.hf.space`
+
+The API route automatically uses this environment variable - no code changes needed!
 
 ## Project Structure
 
