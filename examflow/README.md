@@ -1,36 +1,170 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ExamFlow - Blockchain-Secured Examination System
 
-## Getting Started
+A complete examination management system with blockchain verification, OMR processing, and automated result generation.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- 📝 Candidate Registration with blockchain hash generation
+- 🎫 Admit Card Generation with QR codes
+- ✅ Exam Center Verification via OCR
+- 🔍 AI-powered OMR Sheet Processing (YOLO + OpenCV)
+- 📊 Automated Result Generation
+- 👨‍💼 Admin Panel for Answer Key Management
+- 🔐 Tamper-proof records using Parse/Back4App
+
+## Prerequisites
+
+- Node.js 18+ 
+- Python 3.8+ (for OMR processing)
+- Back4App account (free tier available)
+
+## Environment Setup
+
+### 1. Create `.env.local` file
+
+```env
+# Back4App Configuration (Server-side ONLY)
+BACK4APP_APP_ID=your_app_id_here
+BACK4APP_JS_KEY=your_js_key_here
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Important:** Do NOT use `NEXT_PUBLIC_` prefix. These are server-side only.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Get Back4App Credentials
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Sign up at [Back4App](https://www.back4app.com/)
+2. Create a new app
+3. Go to App Settings → Security & Keys
+4. Copy Application ID and JavaScript Key
 
-## Learn More
+## Installation & Running
 
-To learn more about Next.js, take a look at the following resources:
+### Frontend (Next.js)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Install dependencies
+npm install
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Run development server
+npm run dev
+```
 
-## Deploy on Vercel
+Open [http://localhost:3000](http://localhost:3000)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Backend (Python OMR Processor)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Install Python dependencies
+pip install fastapi uvicorn opencv-python easyocr ultralytics
+
+# Run OMR server
+uvicorn main:app --reload --port 8000
+```
+
+The OMR API will run on [http://localhost:8000](http://localhost:8000)
+
+## Deploying to Vercel
+
+### Step 1: Add Environment Variables
+
+In your Vercel project dashboard:
+
+1. Go to Settings → Environment Variables
+2. Add:
+   - `BACK4APP_APP_ID` = your_app_id
+   - `BACK4APP_JS_KEY` = your_js_key
+
+**✅ No more "NEXT_PUBLIC_" warning!** Credentials are now server-side only.
+
+### Step 2: Deploy
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+Or push to GitHub and connect to Vercel for automatic deployments.
+
+### Step 3: Deploy Python Backend Separately
+
+The Python OMR server needs to be hosted separately. Options:
+
+- **Railway.app** (easiest)
+- **Render.com** (free tier)
+- **AWS EC2** / **DigitalOcean**
+
+Then update the API endpoint in `src/app/api/process-omr/route.ts`:
+
+```typescript
+const response = await fetch('https://your-python-backend.com/process-omr', {
+  method: 'POST',
+  body: formData,
+});
+```
+
+## Project Structure
+
+```
+examflow/
+├── src/
+│   ├── app/
+│   │   ├── api/                    # Server-side API routes
+│   │   │   ├── candidates/         # Candidate CRUD
+│   │   │   ├── exam-results/       # OMR results
+│   │   │   ├── answer-keys/        # Answer keys
+│   │   │   ├── final-results/      # Final results
+│   │   │   └── process-omr/        # OMR processing proxy
+│   │   ├── registration/           # Registration page
+│   │   ├── admit-card/             # Admit card generation
+│   │   ├── exam-center-verification/ # Verification portal
+│   │   ├── omr-processing/         # OMR upload
+│   │   ├── result-generation/      # Result viewing
+│   │   └── admin/answer-key/       # Admin panel
+│   ├── lib/
+│   │   └── parse.ts                # Parse SDK (server-side)
+│   └── types/
+│       └── candidate.ts            # TypeScript types
+├── main.py                         # FastAPI server
+├── omr_processor.py                # OMR processing logic
+└── best.pt                         # YOLO model weights
+```
+
+## Key Changes from Original
+
+### ✅ Security Improvements
+
+1. **No client-side Parse SDK** - All database operations via API routes
+2. **No NEXT_PUBLIC_ variables** - Credentials stay server-side
+3. **Vercel deployment-ready** - No more security warnings
+
+### 🔄 Architecture
+
+- **Before:** Browser → Parse SDK → Back4App
+- **After:** Browser → Next.js API Routes → Parse SDK → Back4App
+
+## Technology Stack
+
+- **Frontend:** Next.js 16, React 19, Tailwind CSS v4
+- **Backend:** FastAPI, Python
+- **Database:** Parse Server (Back4App)
+- **OCR:** Tesseract.js, EasyOCR
+- **ML:** YOLO (Ultralytics)
+- **PDF:** jsPDF, html2canvas
+
+## Database Collections
+
+- **Candidate** - Registration data
+- **ExamResult** - OMR answers + hashes
+- **AnswerKey** - Correct answers
+- **FinalResult** - Evaluated results
+
+## Support
+
+For issues or questions, see `ENV_SETUP.md` for detailed environment configuration.
+
+## License
+
+MIT

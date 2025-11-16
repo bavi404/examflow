@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, ChangeEvent } from 'react';
-import Parse from '@/lib/parse';
 import Tesseract from 'tesseract.js';
 import Link from 'next/link';
 
@@ -146,44 +145,40 @@ export default function OMRProcessingPage() {
       // Step 4: Find Candidate by Registration Number
       console.log('Step 4: Finding Candidate...');
       setStep(4);
-      const Candidate = Parse.Object.extend('Candidate');
-      const candidateQuery = new Parse.Query(Candidate);
-      candidateQuery.equalTo('registrationNumber', extractedRegNumber);
-      const candidate = await candidateQuery.first();
+      const candidateResponse = await fetch(`/api/candidates?registrationNumber=${extractedRegNumber}`);
 
-      if (!candidate) {
+      if (!candidateResponse.ok) {
         throw new Error(`No candidate found with registration number: ${extractedRegNumber}`);
       }
+
+      const candidate = await candidateResponse.json();
 
       // Step 5: Store Results in Database
       console.log('Step 5: Storing in Database...');
       setStep(5);
-      const ExamResult = Parse.Object.extend('ExamResult');
-      const examResult = new ExamResult();
 
-      // Link to candidate
-      examResult.set('registrationNumber', extractedRegNumber);
-      examResult.set('candidateId', candidate.id);
-      examResult.set('candidateName', candidate.get('fullName'));
-      
-      // Store original answer string (simulating IPFS storage)
-      examResult.set('answerString', omrData.answer_string);
-      
-      // Store the hash (for blockchain)
-      examResult.set('answerStringHash', hash);
-      
-      // Store additional OMR data
-      examResult.set('omrName', omrData.name);
-      examResult.set('omrRollNumber', omrData.roll_number);
-      examResult.set('version', omrData.version);
-      examResult.set('totalQuestions', Object.keys(omrData.answers).length);
-      examResult.set('answeredQuestions', Object.values(omrData.answers).filter(a => a !== null).length);
-      
-      // Metadata
-      examResult.set('processedAt', new Date());
-      examResult.set('status', 'secured');
+      const examResultData = {
+        registrationNumber: extractedRegNumber,
+        candidateId: candidate.id,
+        candidateName: candidate.fullName,
+        answerString: omrData.answer_string,
+        answerStringHash: hash,
+        omrName: omrData.name,
+        omrRollNumber: omrData.roll_number,
+        version: omrData.version,
+        totalQuestions: Object.keys(omrData.answers).length,
+        answeredQuestions: Object.values(omrData.answers).filter(a => a !== null).length,
+      };
 
-      await examResult.save();
+      const examResultResponse = await fetch('/api/exam-results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(examResultData),
+      });
+
+      if (!examResultResponse.ok) {
+        throw new Error('Failed to save exam result');
+      }
 
       console.log('✅ Result secured successfully!');
       setStep(6);

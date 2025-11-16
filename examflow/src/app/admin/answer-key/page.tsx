@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Parse from '@/lib/parse';
 import Link from 'next/link';
 
 export default function AdminAnswerKeyPage() {
@@ -56,18 +55,21 @@ export default function AdminAnswerKeyPage() {
         throw new Error('Please generate answer string first');
       }
 
-      // Save to database
-      const AnswerKey = Parse.Object.extend('AnswerKey');
-      const answerKeyObj = new AnswerKey();
+      // Save to database via API
+      const response = await fetch('/api/answer-keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          examName,
+          totalQuestions,
+          answerKey,
+          answerString,
+        }),
+      });
 
-      answerKeyObj.set('examName', examName);
-      answerKeyObj.set('totalQuestions', totalQuestions);
-      answerKeyObj.set('answerKey', answerKey);
-      answerKeyObj.set('answerString', answerString);
-      answerKeyObj.set('createdAt', new Date());
-      answerKeyObj.set('status', 'active');
-
-      await answerKeyObj.save();
+      if (!response.ok) {
+        throw new Error('Failed to save answer key');
+      }
 
       setSaved(true);
       console.log('✅ Answer key saved successfully!');

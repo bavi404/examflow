@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, ChangeEvent } from 'react';
-import Parse from '@/lib/parse';
 import Tesseract from 'tesseract.js';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 interface ResultData {
   registrationNumber: string;
@@ -114,40 +112,34 @@ export default function ResultGenerationPage() {
       console.log('Registration Number:', extractedRegNumber);
 
       // Step 2: Find Candidate
-      const Candidate = Parse.Object.extend('Candidate');
-      const candidateQuery = new Parse.Query(Candidate);
-      candidateQuery.equalTo('registrationNumber', extractedRegNumber);
-      const candidate = await candidateQuery.first();
+      const candidateResponse = await fetch(`/api/candidates?registrationNumber=${extractedRegNumber}`);
 
-      if (!candidate) {
+      if (!candidateResponse.ok) {
         throw new Error(`No candidate found with registration number: ${extractedRegNumber}`);
       }
 
-      // Step 3: Get Candidate's OMR Result
-      const ExamResult = Parse.Object.extend('ExamResult');
-      const examResultQuery = new Parse.Query(ExamResult);
-      examResultQuery.equalTo('registrationNumber', extractedRegNumber);
-      const examResult = await examResultQuery.first();
+      const candidate = await candidateResponse.json();
 
-      if (!examResult) {
+      // Step 3: Get Candidate's OMR Result
+      const examResultResponse = await fetch(`/api/exam-results?registrationNumber=${extractedRegNumber}`);
+
+      if (!examResultResponse.ok) {
         throw new Error('No exam result found for this candidate. Please process OMR sheet first.');
       }
 
-      const candidateAnswerString = examResult.get('answerString');
+      const examResult = await examResultResponse.json();
+      const candidateAnswerString = examResult.answerString;
 
       // Step 4: Get Answer Key
-      const AnswerKey = Parse.Object.extend('AnswerKey');
-      const answerKeyQuery = new Parse.Query(AnswerKey);
-      answerKeyQuery.equalTo('examName', candidate.get('examName'));
-      answerKeyQuery.equalTo('status', 'active');
-      const answerKey = await answerKeyQuery.first();
+      const answerKeyResponse = await fetch(`/api/answer-keys?examName=${encodeURIComponent(candidate.examName)}`);
 
-      if (!answerKey) {
+      if (!answerKeyResponse.ok) {
         throw new Error('No answer key found for this exam.');
       }
 
-      const correctAnswerString = answerKey.get('answerString');
-      const totalQuestions = answerKey.get('totalQuestions');
+      const answerKey = await answerKeyResponse.json();
+      const correctAnswerString = answerKey.answerString;
+      const totalQuestions = answerKey.totalQuestions;
 
       // Step 5: Compare Answers
       const { correct, wrong, unattempted } = compareAnswers(
@@ -161,10 +153,10 @@ export default function ResultGenerationPage() {
       // Step 6: Prepare Result Data
       const resultData: ResultData = {
         registrationNumber: extractedRegNumber,
-        candidateName: candidate.get('fullName'),
-        examName: candidate.get('examName'),
-        dateOfBirth: candidate.get('dateOfBirth')?.toISOString().split('T')[0] || '',
-        examCategory: candidate.get('examCategory'),
+        candidateName: candidate.fullName,
+        examName: candidate.examName,
+        dateOfBirth: candidate.dateOfBirth?.split('T')[0] || '',
+        examCategory: candidate.examCategory,
         candidateAnswerString,
         correctAnswerString,
         totalQuestions,
@@ -176,23 +168,28 @@ export default function ResultGenerationPage() {
       };
 
       // Step 7: Store Final Result
-      const FinalResult = Parse.Object.extend('FinalResult');
-      const finalResult = new FinalResult();
+      const finalResultData = {
+        registrationNumber: extractedRegNumber,
+        candidateId: candidate.id,
+        candidateName: candidate.fullName,
+        examName: candidate.examName,
+        totalQuestions,
+        correctAnswers: correct,
+        wrongAnswers: wrong,
+        unattempted,
+        score,
+        percentage,
+      };
 
-      finalResult.set('registrationNumber', extractedRegNumber);
-      finalResult.set('candidateId', candidate.id);
-      finalResult.set('candidateName', candidate.get('fullName'));
-      finalResult.set('examName', candidate.get('examName'));
-      finalResult.set('totalQuestions', totalQuestions);
-      finalResult.set('correctAnswers', correct);
-      finalResult.set('wrongAnswers', wrong);
-      finalResult.set('unattempted', unattempted);
-      finalResult.set('score', score);
-      finalResult.set('percentage', percentage);
-      finalResult.set('status', 'published');
-      finalResult.set('generatedAt', new Date());
+      const finalResultResponse = await fetch('/api/final-results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(finalResultData),
+      });
 
-      await finalResult.save();
+      if (!finalResultResponse.ok) {
+        throw new Error('Failed to save final result');
+      }
 
       console.log('✅ Result generated and saved!');
       setResult(resultData);

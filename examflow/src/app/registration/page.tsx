@@ -2,9 +2,7 @@
 
 import { useState, FormEvent, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Parse from '@/lib/parse';
 import { CandidateFormData } from '@/types/candidate';
-import crypto from 'crypto';
 
 export default function RegistrationPage() {
   const router = useRouter();
@@ -59,40 +57,8 @@ export default function RegistrationPage() {
     setLoading(true);
 
     try {
-      // Create Parse object for Candidate
-      const Candidate = Parse.Object.extend('Candidate');
-      const candidate = new Candidate();
-
-      // Set all form data
-      candidate.set('fullName', formData.fullName);
-      candidate.set('fatherName', formData.fatherName);
-      candidate.set('motherName', formData.motherName);
-      candidate.set('dateOfBirth', new Date(formData.dateOfBirth));
-      candidate.set('gender', formData.gender);
-      candidate.set('email', formData.email);
-      candidate.set('phone', formData.phone);
-      candidate.set('address', formData.address);
-      candidate.set('city', formData.city);
-      candidate.set('state', formData.state);
-      candidate.set('pincode', formData.pincode);
-      candidate.set('examName', formData.examName);
-      candidate.set('examCategory', formData.examCategory);
-      candidate.set('qualification', formData.qualification);
-      candidate.set('passingYear', formData.passingYear);
-      candidate.set('percentage', parseFloat(formData.percentage));
-      candidate.set('preferredCenter1', formData.preferredCenter1);
-      candidate.set('preferredCenter2', formData.preferredCenter2);
-      candidate.set('preferredCenter3', formData.preferredCenter3);
-      candidate.set('aadharNumber', formData.aadharNumber);
-      candidate.set('photoURL', formData.photoURL);
-      
       // Generate unique registration number
       const registrationNumber = `XYZ${Date.now()}${Math.floor(Math.random() * 1000)}`;
-      candidate.set('registrationNumber', registrationNumber);
-      
-      // Set status
-      candidate.set('status', 'registered');
-      candidate.set('admitCardGenerated', false);
       
       // Generate hash for blockchain verification
       const dataString = JSON.stringify({
@@ -102,14 +68,34 @@ export default function RegistrationPage() {
         regNumber: registrationNumber,
         timestamp: Date.now()
       });
-      const registrationHash = crypto.createHash('sha256').update(dataString).digest('hex');
-      candidate.set('registrationHash', registrationHash);
+      
+      // Hash using Web Crypto API (browser-compatible)
+      const encoder = new TextEncoder();
+      const data = encoder.encode(dataString);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const registrationHash = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
 
-      // Save to Back4app (automatically persists to blockchain)
-      const savedCandidate = await candidate.save();
+      // Call API to save candidate
+      const response = await fetch('/api/candidates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          registrationNumber,
+          registrationHash,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to register candidate');
+      }
+
+      const result = await response.json();
       
       // Redirect to admit card page with candidate ID
-      router.push(`/admit-card?id=${savedCandidate.id}`);
+      router.push(`/admit-card?id=${result.id}`);
       
     } catch (error) {
       console.error('Registration error:', error);

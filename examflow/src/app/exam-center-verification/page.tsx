@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, ChangeEvent } from 'react';
-import Parse from '@/lib/parse';
 import Tesseract from 'tesseract.js';
 import Link from 'next/link';
 
@@ -94,12 +93,9 @@ export default function ExamCenterVerificationPage() {
 
       // Step 2: Check if Candidate exists in Database
       console.log('Step 2: Checking Database...');
-      const Candidate = Parse.Object.extend('Candidate');
-      const query = new Parse.Query(Candidate);
-      query.equalTo('registrationNumber', extractedRegNumber);
-      const candidate = await query.first();
+      const response = await fetch(`/api/candidates?registrationNumber=${extractedRegNumber}`);
 
-      if (!candidate) {
+      if (!response.ok) {
         // Registration number NOT found in database
         setVerificationResult({
           isVerified: false,
@@ -109,17 +105,19 @@ export default function ExamCenterVerificationPage() {
         return;
       }
 
+      const candidate = await response.json();
+
       // Registration number FOUND in database - Candidate is verified
       setVerificationResult({
         isVerified: true,
         candidate: {
-          fullName: candidate.get('fullName'),
-          registrationNumber: candidate.get('registrationNumber'),
-          examName: candidate.get('examName'),
-          dateOfBirth: candidate.get('dateOfBirth')?.toISOString().split('T')[0] || '',
-          email: candidate.get('email'),
-          examCategory: candidate.get('examCategory'),
-          preferredCenter1: candidate.get('preferredCenter1'),
+          fullName: candidate.fullName,
+          registrationNumber: candidate.registrationNumber,
+          examName: candidate.examName,
+          dateOfBirth: candidate.dateOfBirth?.split('T')[0] || '',
+          email: candidate.email,
+          examCategory: candidate.examCategory,
+          preferredCenter1: candidate.preferredCenter1,
         },
         message: 'Candidate verified successfully! Registration number found in blockchain database.'
       });

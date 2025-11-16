@@ -1,13 +1,15 @@
-import Parse from 'parse';
+// Server-side Parse instance (for API routes only)
+import Parse from 'parse/node';
 
-const appId = process.env.NEXT_PUBLIC_BACK4APP_APP_ID;
-const jsKey = process.env.NEXT_PUBLIC_BACK4APP_JS_KEY;
+// These env vars do NOT have NEXT_PUBLIC_ prefix (server-side only)
+const appId = process.env.BACK4APP_APP_ID;
+const jsKey = process.env.BACK4APP_JS_KEY;
 
 if (!appId || !jsKey) {
   throw new Error('Missing Back4App environment variables');
 }
 
-// Initialize Parse
+// Initialize Parse for server-side use
 Parse.initialize(appId, jsKey);
 Parse.serverURL = 'https://parseapi.back4app.com/';
 

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Parse from '@/lib/parse';
 import QRCode from 'qrcode';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -49,32 +48,36 @@ function AdmitCardContent() {
 
   const fetchCandidateData = async () => {
     try {
-      const Candidate = Parse.Object.extend('Candidate');
-      const query = new Parse.Query(Candidate);
-      const result = await query.get(candidateId!);
+      const response = await fetch(`/api/candidates?id=${candidateId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch candidate data');
+      }
+
+      const result = await response.json();
 
       const candidateData: CandidateData = {
-        id: result.id!,
-        fullName: result.get('fullName'),
-        fatherName: result.get('fatherName'),
-        motherName: result.get('motherName'),
-        dateOfBirth: result.get('dateOfBirth')?.toISOString().split('T')[0] || '',
-        gender: result.get('gender'),
-        email: result.get('email'),
-        phone: result.get('phone'),
-        city: result.get('city'),
-        state: result.get('state'),
-        pincode: result.get('pincode'),
-        examName: result.get('examName'),
-        examCategory: result.get('examCategory'),
-        qualification: result.get('qualification'),
-        passingYear: result.get('passingYear'),
-        percentage: result.get('percentage'),
-        preferredCenter1: result.get('preferredCenter1'),
-        aadharNumber: result.get('aadharNumber'),
-        registrationNumber: result.get('registrationNumber'),
-        registrationHash: result.get('registrationHash'),
-        photoURL: result.get('photoURL'),
+        id: result.id,
+        fullName: result.fullName,
+        fatherName: result.fatherName,
+        motherName: result.motherName,
+        dateOfBirth: result.dateOfBirth?.split('T')[0] || '',
+        gender: result.gender,
+        email: result.email,
+        phone: result.phone,
+        city: result.city,
+        state: result.state,
+        pincode: result.pincode,
+        examName: result.examName,
+        examCategory: result.examCategory,
+        qualification: result.qualification,
+        passingYear: result.passingYear,
+        percentage: result.percentage,
+        preferredCenter1: result.preferredCenter1,
+        aadharNumber: result.aadharNumber,
+        registrationNumber: result.registrationNumber,
+        registrationHash: result.registrationHash,
+        photoURL: result.photoURL,
       };
 
       setCandidate(candidateData);
