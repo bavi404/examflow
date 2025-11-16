@@ -217,20 +217,6 @@ export default function OMRProcessingPage() {
           <p className="text-gray-600 mt-2">Upload OMR sheet and admit card to process and secure results on blockchain</p>
         </div>
 
-        {/* Server Status Info */}
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-blue-600">info</span>
-            <div className="text-sm text-blue-800">
-              <p className="font-semibold mb-1">Local Server Required:</p>
-              <p>Make sure your OMR processing server is running:</p>
-              <code className="block mt-2 bg-blue-100 p-2 rounded text-xs">
-                uvicorn main:app --reload --port 8000
-              </code>
-            </div>
-          </div>
-        </div>
-
         {/* Error Display */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
