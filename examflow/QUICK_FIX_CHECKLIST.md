@@ -87,18 +87,25 @@ In Vercel → Deployments:
 
 ### Check #4: Build Failed on Render?
 
-If you see **"Cannot import 'setuptools.build_meta'"** error:
+If you see **"Cannot import 'setuptools.build_meta'"** or **"No matching distribution found for torch"** error:
 
 **Solution:**
-1. Go to Render Dashboard → Your Service
-2. Click **Settings** → **"Clear build cache & deploy"**
-3. Make sure these files are in your repo:
+1. Go to Render Dashboard → Your Service → **Settings**
+2. Make sure **Root Directory** is set to: `examflow`
+3. Click **"Clear build cache & deploy"**
+4. Make sure these files are in your repo:
    - ✅ `runtime.txt` (contains: `python-3.11.7`)
-   - ✅ `requirements.txt` (updated with setuptools)
-   - ✅ `render.yaml` (correct build command)
-4. Redeploy
+   - ✅ `requirements.txt` (updated - no version limits on torch)
+   - ✅ `render.yaml` (has `rootDir: examflow`)
+5. Redeploy
 
-The latest code push fixed this issue automatically.
+**The latest code push fixed this issue automatically.**
+
+### Check #4b: Still Using Python 3.13?
+
+If Render logs show "Using Python version 3.13.4":
+
+**This is OK!** The updated requirements now support Python 3.13. The build should complete successfully.
 
 ### Check #5: Model File Exists?
 

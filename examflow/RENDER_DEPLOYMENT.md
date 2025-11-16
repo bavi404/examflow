@@ -62,7 +62,7 @@ git push
    | **Name** | `examflow-omr-processor` |
    | **Region** | Choose closest to you |
    | **Branch** | `main` |
-   | **Root Directory** | `examflow` (if your Python files are in subfolder) or leave blank |
+   | **Root Directory** | `examflow` |
    | **Runtime** | `Python 3` |
    | **Build Command** | `pip install --upgrade pip setuptools wheel && pip install -r requirements.txt` |
    | **Start Command** | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
@@ -195,8 +195,19 @@ Expected response:
 1. Make sure `runtime.txt` exists with: `python-3.11.7`
 2. Build command should be: `pip install --upgrade pip setuptools wheel && pip install -r requirements.txt`
 3. Check Render is using Python 3.11.x (not 3.13)
-4. Clear build cache and redeploy:
+4. Make sure **Root Directory** is set to `examflow` in Render settings
+5. Clear build cache and redeploy:
    - Render Dashboard → Settings → "Clear build cache & deploy"
+
+### Error: "No matching distribution found for torch"
+
+**Cause:** Torch version constraints incompatible with Python version
+
+**Solution:**
+1. If using Python 3.13: Requirements have been updated to support it
+2. Latest code removes strict version limits on torch
+3. Make sure you've pulled latest changes: `git pull origin main`
+4. Redeploy on Render
 
 ### Error: "ModuleNotFoundError" or "ImportError"
 

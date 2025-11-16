@@ -12,13 +12,13 @@ python-multipart>=0.0.6
 opencv-python-headless>=4.8.0
 Pillow>=10.0.0
 
-# OCR and ML
+# OCR and ML - Compatible with Python 3.11-3.13
 easyocr>=1.7.0
-torch>=2.0.0,<2.2.0
-torchvision>=0.15.0,<0.17.0
+torch>=2.0.0
+torchvision>=0.15.0
 ultralytics>=8.0.0
 
 # Scientific computing
-numpy>=1.24.0,<2.0.0
+numpy>=1.24.0
 scipy>=1.10.0
 
